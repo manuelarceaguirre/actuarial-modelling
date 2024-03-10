@@ -1,0 +1,76 @@
+---
+title: "Maximum likelihood estimator"
+author: "Manuel Arce"
+date: "2024-01-10"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(Delaporte)
+```
+
+# Using seed 123, generate a sample of size 20 from a negative binomial distribution with size = 20 and prob = 0.3
+
+```{r}
+set.seed(123)
+sample_data <- rnbinom(n = 20, size = 20, prob = 0.3)
+sample_data
+```
+
+# Fit a geometric distribution to the generated sample from exercise 3. What is the estimated value of p?
+
+# Maximum likelihood estimator
+
+```{r}
+p_mle <- 1 / (mean(sample_data) + 1)
+p_mle
+```
+
+# Maximum likelihood estimator using the optim function
+
+```{r}
+geom_model <- optim(par = p_mle,
+                    fn = function(par) {
+                        -sum(
+                            log(
+                                dgeom(x = sample_data, prob = par)
+                            )
+                        )
+                    },
+                    method = "L-BFGS-B",
+                    lower = 0.0001,
+                    upper = 0.9999)
+geom_model$par
+```
+
+# Fit a Delaporte distribution by maximum likelihood using the generated sample.
+
+# What values do you estimate for α, β, λ?
+
+```{r}
+
+beta <- ((mean((sample_data - mean(sample_data))^3) - var(sample_data)) /
+         (2 * (var(sample_data) - mean(sample_data)))) - 1
+alpha <- (var(sample_data) - mean(sample_data)) / beta^2
+lambda <- mean(sample_data) - alpha * beta
+
+delaporte_model <- optim(par = c(alpha, beta, lambda),
+                         fn = function(par) {
+                             -sum(
+                                 log(
+                                     ddelap(x = sample_data,
+                                            alpha = par[1],
+                                            beta = par[2],
+                                            lambda = par[3])
+                                 )
+                             )
+                         },
+                         method = "L-BFGS-B",
+                         lower = c(0.01, 0.01, 0.01),
+                         upper = c(70, 70, 80))
+delaporte_model$par
+```
