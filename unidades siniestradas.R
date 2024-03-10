@@ -1,4 +1,3 @@
-#Tarea 1 
 library(dplyr)
 library(zoo)
 library(ggplot2)
